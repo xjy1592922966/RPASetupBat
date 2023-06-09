@@ -1,8 +1,16 @@
 @echo off
-setlocal enabledelayedexpansion
+@REM 启用环境变量的延迟扩展
+setlocal enabledelayedexpansion  
+@REM 将控制台代码页设置为 `65001` 可以将控制台输出和输入编码更改为 UTF-8，这样可以支持更广泛的字符集和Unicode字符。
 chcp 65001
 
-@REM 判断是否存在D盘或E盘，选择其中一个硬盘作为项目目录
+REM 判断是否存在D盘或E盘，选择其中一个硬盘作为项目目录
+set drives=
+for %%i in (D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z) do (
+    IF EXIST %%i:\ (
+        set drives=!drives! %%i
+    )
+)
 IF EXIST D:\ (
     set project_dir=D:\wxrpa
 ) ELSE IF EXIST E:\ (
@@ -10,10 +18,18 @@ IF EXIST D:\ (
 ) ELSE IF EXIST C:\ (
     set project_dir=C:\wxrpa
 ) ELSE (
-    echo 未找到可用的硬盘，请手动指定项目目录。
-    pause
-    exit
-)
+    :CHOOSE_DRIVE
+    echo 未找到可用的硬盘，请手动指定项目目录
+    SETLOCAL EnableDelayedExpansion
+    
+    echo 当前可用的硬盘盘符有：%drives%
+    set /p drive_letter=请输入项目目录的硬盘盘符（如 D、E、C 等）：
+    set project_dir=%drive_letter%:\wxrpa
+    IF NOT EXIST %drive_letter%:\ (
+        echo 指定的硬盘盘符不存在，请重新输入
+        goto CHOOSE_DRIVE
+    )
+) 
 
 @REM 创建项目目录和相关文件夹
 mkdir %project_dir%
@@ -28,8 +44,7 @@ set files[0]=https://oss-cdn.hcolor.pro/autojs/project/wechat/wexin.zip,wechat.z
 set files[1]=https://oss-cdn.hcolor.pro/autojs/project/wechat/python.exe,python3964.exe
 set files[2]=https://download.java.net/java/GA/jdk19.0.2/fdb695a9d9064ad6b064dc6df578380c/7/GPL/openjdk-19.0.2_windows-x64_bin.zip,java.zip
 set files[3]=https://download.microsoft.com/download/9/C/D/9CD480DC-0301-41B0-AAAB-FE9AC1F60237/VSU4/vcredist_x86.exe,vcredist_x86.exe
-set files[4]=https://oss-cdn.hcolor.pro/autojs/project/wechat/TagUIWindows.zip,TagUIWindows.zip
-
+set files[4]=https://oss-cdn.hcolor.pro/autojs/project/wechat/TagUI_Windows.zip,TagUI_Windows.zip
 
 for /l %%i in (0, 1, 4) do (
     set "line=!files[%%i]!"
@@ -51,9 +66,9 @@ for /l %%i in (0, 1, 4) do (
     )
 )
 
-echo 解压核心代码中,请等待
-PowerShell -Command Expand-Archive -Force %project_dir%\download\wechat.zip %project_dir%\lib
-echo 解压核心代码完成
+echo 解压测试代码中,请等待
+PowerShell -Command Expand-Archive -Force %project_dir%\download\wechat.zip %project_dir%\lib\code
+echo 解压测试代码完成
 
 echo ----------------------------
 echo 静默安装python中,请等待
@@ -64,43 +79,32 @@ echo ----------------------------
 echo 添加python环境变量中,请等待
 setx /M PATH "%project_dir%\lib\python39;%project_dir%\lib\python39\Scripts;%PATH%"
 echo 添加python环境变量完成
-
 echo ----------------------------
-
-
 echo 解压java的openjdk中,请等待
 PowerShell -Command Expand-Archive -Force %project_dir%\download\java.zip %project_dir%\lib\javaopenjdk
 echo 解压java的openjdk完成
-
 echo ----------------------------
-
 echo 添加java的openjdk环境变量中,请等待
 setx /M JAVA_HOME "%project_dir%\lib\javaopenjdk\jdk-19.0.2"
 setx /M PATH "%project_dir%\lib\javaopenjdk\jdk-19.0.2\bin;%PATH%"
-
 echo 添加java的openjdk环境变量完成
-
 echo ----------------------------
 echo 静默安装vcredist中,请等待
 start /wait %project_dir%\download\vcredist_x86.exe /q
 echo 静默安装vcredist完成
 echo ----------------------------
-
 echo 复制TagUI中,请等待
 copy /y %project_dir%\download\TagUIWindows.zip %project_dir%\lib\code
 mkdir %APPDATA%\tagui
 copy /y %project_dir%\download\TagUIWindows.zip %APPDATA%\tagui
-
 echo 复制TagUI完成
 echo ----------------------------
-
 echo "创建桌面快捷方式..."
 set "SRC_FILE=%project_dir%\lib\python39\python.exe"
 set "DST_FILE=%userprofile%\Desktop\添加企业微信RPA.lnk"
-set "PARAMS=%project_dir%\lib\main.py"
+set "PARAMS=%project_dir%\lib\code\main.py"
 set "WORKING_DIR=%project_dir%\lib"
 powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%DST_FILE%'); $Shortcut.TargetPath = 'python'; $Shortcut.Arguments= '%PARAMS%'; $Shortcut.WorkingDirectory = '%WORKING_DIR%'; $Shortcut.Save()"
-
 echo 创建桌面快捷方式完成
 
 echo.
