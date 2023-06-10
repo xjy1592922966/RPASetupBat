@@ -44,9 +44,8 @@ set files[0]=https://oss-cdn.hcolor.pro/autojs/project/wechat/wexin.zip,wechat.z
 set files[1]=https://oss-cdn.hcolor.pro/autojs/project/wechat/python.exe,python3964.exe
 set files[2]=https://download.java.net/java/GA/jdk19.0.2/fdb695a9d9064ad6b064dc6df578380c/7/GPL/openjdk-19.0.2_windows-x64_bin.zip,java.zip
 set files[3]=https://download.microsoft.com/download/9/C/D/9CD480DC-0301-41B0-AAAB-FE9AC1F60237/VSU4/vcredist_x86.exe,vcredist_x86.exe
-set files[4]=https://oss-cdn.hcolor.pro/autojs/project/wechat/TagUI_Windows.zip,TagUI_Windows.zip
 
-for /l %%i in (0, 1, 4) do (
+for /l %%i in (0, 1, 3) do (
     set "line=!files[%%i]!"
     for /f "tokens=1,2 delims=," %%a in ("!line!") do (
         set "@REMote=%%a"
@@ -93,18 +92,13 @@ echo 静默安装vcredist中,请等待
 start /wait %project_dir%\download\vcredist_x86.exe /q
 echo 静默安装vcredist完成
 echo ----------------------------
-echo 复制TagUI中,请等待
-copy /y %project_dir%\download\TagUIWindows.zip %project_dir%\lib\code
-mkdir %APPDATA%\tagui
-copy /y %project_dir%\download\TagUIWindows.zip %APPDATA%\tagui
-echo 复制TagUI完成
-echo ----------------------------
+
 echo "创建桌面快捷方式..."
 set "SRC_FILE=%project_dir%\lib\python39\python.exe"
 set "DST_FILE=%userprofile%\Desktop\添加企业微信RPA.lnk"
 set "PARAMS=%project_dir%\lib\code\main.py"
-set "WORKING_DIR=%project_dir%\lib"
-powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%DST_FILE%'); $Shortcut.TargetPath = 'python'; $Shortcut.Arguments= '%PARAMS%'; $Shortcut.WorkingDirectory = '%WORKING_DIR%'; $Shortcut.Save()"
+set "WORKING_DIR=%project_dir%\lib\code"
+powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%DST_FILE%'); $Shortcut.TargetPath = '%SRC_FILE%'; $Shortcut.Arguments= '%PARAMS%'; $Shortcut.WorkingDirectory = '%WORKING_DIR%'; $Shortcut.Save()"
 echo 创建桌面快捷方式完成
 
 echo.
